@@ -1,9 +1,9 @@
 
 from fastapi import FastAPI, Depends, HTTPException
-from app.database import session, engine
-from app import database_models
-from sqlalchemy.orm import SessionP
-from app.routers import auth
+from backend.database import session, engine
+from backend import database_models
+from sqlalchemy.orm import Session
+from backend.routers import auth
 from fastapi.middleware.cors import CORSMiddleware
 
 origins = ["http://localhost:3000"]
