@@ -1,46 +1,24 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
-from backend import schemas, database_models, utils
-from backend.database import session
+from fastapi import APIRouter, HTTPException, status
+import logging
+import traceback
+from schemas import UserCreate  # or the appropriate schema name
+
 
 router = APIRouter()
 
-def get_db():
-    db = session()
+@router.post("/auth/register")
+async def register_user(user: UserCreate):
     try:
-        yield db
-    finally:
-        db.close()
+        # Your registration logic here
+        # For example:
+        # create_user_in_db(user)
+        return {"message": "User registered successfully"}
+    except Exception as e:
+        # Log the exception stack trace but don't raise an HTTP error to expose details
+        logging.error(f"Registration error: {traceback.format_exc()}")
 
-@router.post("/register", response_model=schemas.UserOut)
-def register_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
-    existing_user = db.query(database_models.User).filter(database_models.User.email == user.email).first()
-    if existing_user:
-        raise HTTPException(status_code=400, detail="This email is already registered.")
-
-    hashed_pw = utils.hash_password(user.password)
-    db_user = database_models.User(
-        username=user.username, 
-        email=user.email,
-        hashed_password=hashed_pw
-    )
-
-    db.add(db_user)
-    db.commit()
-    db.refresh(db_user)
-    return db_user
-
-@router.post("/login", response_model=schemas.Token)
-def login_user(user: schemas.UserLogin, db: Session = Depends(get_db)):
-    db_user = db.query(database_models.User).filter(database_models.User.email == user.email).first()
-
-    if not db_user or not utils.verify_password(user.password, db_user.hashed_password):
+        # Raise HTTPException with 500 but generic message for client
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid email or password",
-            headers={"WWW-Authenticate": "Bearer"},
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal Server Error"
         )
-
-    access_token = utils.create_access_token(data={"sub": db_user.email})
-    return {"access_token": access_token, "token_type": "bearer"}
-

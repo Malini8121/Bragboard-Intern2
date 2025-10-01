@@ -1,0 +1,3 @@
+import personIcon from './Assets/person.png';
+// In your component render:
+<img src={personIcon} alt="Person Icon" />
