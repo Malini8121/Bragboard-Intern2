@@ -1,3 +1,0 @@
-import emailIcon from './Assets/email.png';
-// In your component render:
-<img src={emailIcon} alt="Email Icon" />
